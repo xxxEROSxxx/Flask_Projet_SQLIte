@@ -3,12 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <title>Fiche client</title>
+    <style>
+        table { border-collapse: collapse; }
+        th, td { border: 1px solid #ccc; padding: 6px 12px; }
+        th { background: #f0f0f0; }
+    </style>
 </head>
 <body>
     <h1>{{ client['prenom'] }} {{ client['nom'] }}</h1>
     <p><strong>N° client :</strong> {{ client['id'] }}</p>
     <p><strong>Adresse :</strong> {{ client['adresse'] }}</p>
+    <p><strong>Téléphone :</strong> {{ client['telephone'] or '-' }}</p>
     <p><strong>Créé le :</strong> {{ client['created'] }}</p>
+
+    <h2>Commandes ({{ commandes|length }})</h2>
+    {% if commandes %}
+    <table>
+        <tr><th>N°</th><th>Date</th><th>Produit</th><th>Montant</th></tr>
+        {% for c in commandes %}
+        <tr>
+            <td>{{ c['id'] }}</td>
+            <td>{{ c['date_commande'] }}</td>
+            <td>{{ c['produit'] }}</td>
+            <td>{{ '%.2f'|format(c['montant']) }} €</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p>Aucune commande.</p>
+    {% endif %}
+
+    <h2>Nouvelle commande</h2>
+    <form action="/ajouter_commande/{{ client['id'] }}" method="post">
+        <input type="text" name="produit" placeholder="Produit" required>
+        <input type="number" name="montant" placeholder="Montant" step="0.01" min="0" required>
+        <button type="submit">Ajouter</button>
+    </form>
+
     <p><a href="/consultation/">⬅️ Retour à la liste</a></p>
 </body>
 </html>

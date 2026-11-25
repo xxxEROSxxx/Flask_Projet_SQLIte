@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Commandes</title>
+    <style>
+        table { border-collapse: collapse; }
+        th, td { border: 1px solid #ccc; padding: 6px 12px; }
+        th { background: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <h1>Toutes les commandes</h1>
+    <p>{{ data|length }} commande(s).</p>
+    <table>
+        <tr><th>N°</th><th>Client</th><th>Produit</th><th>Montant</th></tr>
+        {% for row in data %}
+        <tr>
+            <td>{{ row['id'] }}</td>
+            <td><a href="/fiche_client/{{ row['client_id'] }}">{{ row['nom'] }} {{ row['prenom'] }}</a></td>
+            <td>{{ row['produit'] }}</td>
+            <td>{{ '%.2f'|format(row['montant']) }} €</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <p><a href="/consultation/">⬅️ Retour aux clients</a></p>
+</body>
+</html>

@@ -28,6 +28,7 @@ def get_db():
     """Ouvre une connexion à la base de données SQLite."""
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row  # pour écrire row['nom'] au lieu de row[2]
+    conn.execute('PRAGMA foreign_keys = ON')  # faire respecter les clés étrangères
     return conn
 
 
@@ -72,11 +73,14 @@ def Readfiche(post_id):
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM clients WHERE id = ?', (post_id,))
     data = cursor.fetchone()  # une seule ligne (ou None si l'id n'existe pas)
-    conn.close()
     if not data:
+        conn.close()
         return "<h2>Client introuvable</h2>", 404
-    # Rendre le template HTML de la fiche et transmettre le client
-    return render_template('fiche_client.html', client=data)
+    # Exercice 7 : 2e requête pour les commandes du client
+    cursor.execute('SELECT * FROM commandes WHERE client_id = ? ORDER BY date_commande DESC', (post_id,))
+    commandes = cursor.fetchall()
+    conn.close()
+    return render_template('fiche_client.html', client=data, commandes=commandes)
 
 
 @app.route('/consultation/')
@@ -153,14 +157,19 @@ def recherche():
 
 
 
-# Exercice 5 - Partie A : supprimer un client (POST uniquement)
+# Exercice 5 - Partie A + Exercice 7 - Partie D : supprimer un client (POST uniquement)
 @app.route('/supprimer_client/<int:id>', methods=['POST'])
 def supprimer_client(id):
     conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute('DELETE FROM clients WHERE id = ?', (id,))
-    conn.commit()
-    conn.close()
+    try:
+        conn.execute('DELETE FROM clients WHERE id = ?', (id,))
+        conn.commit()
+    except sqlite3.IntegrityError:
+        nb = conn.execute('SELECT COUNT(*) FROM commandes WHERE client_id = ?', (id,)).fetchone()[0]
+        return (f"<h2>Impossible : ce client a {nb} commande(s).</h2>"
+                f"<p><a href='/fiche_client/{id}'>Voir sa fiche</a></p>"), 409
+    finally:
+        conn.close()  # exécuté dans TOUS les cas, même après le return
     return redirect('/consultation/')
 
 
@@ -187,6 +196,57 @@ def modifier_client(id):
     if client is None:
         return "<h2>Client introuvable</h2>", 404
     return render_template('modifier_client.html', client=client)
+
+
+# Exercice 7 - Partie C : toutes les commandes avec le nom du client (JOIN)
+@app.route('/commandes/')
+def liste_commandes():
+    conn = get_db()
+    data = conn.execute('''
+        SELECT commandes.id, commandes.client_id, clients.nom, clients.prenom,
+               commandes.produit, commandes.montant
+        FROM commandes
+        JOIN clients ON commandes.client_id = clients.id
+        ORDER BY commandes.id
+    ''').fetchall()
+    conn.close()
+    return render_template('commandes.html', data=data)
+
+
+# Exercice 7 - Partie C : nombre de commandes et total par client (LEFT JOIN + GROUP BY)
+@app.route('/statistiques/')
+def statistiques():
+    conn = get_db()
+    data = conn.execute('''
+        SELECT clients.id, clients.nom, clients.prenom,
+               COUNT(commandes.id) AS nb_commandes,
+               COALESCE(SUM(commandes.montant), 0) AS total
+        FROM clients
+        LEFT JOIN commandes ON commandes.client_id = clients.id
+        GROUP BY clients.id
+        ORDER BY total DESC
+    ''').fetchall()
+    conn.close()
+    return render_template('statistiques.html', data=data)
+
+
+# Exercice 7 - Défi : ajouter une commande depuis la fiche client
+@app.route('/ajouter_commande/<int:client_id>', methods=['POST'])
+def ajouter_commande(client_id):
+    produit = request.form.get('produit', '').strip()
+    montant = request.form.get('montant', '').strip()
+    if not produit or not montant:
+        return "<h2>Produit et montant obligatoires</h2>", 400
+    conn = get_db()
+    try:
+        conn.execute('INSERT INTO commandes (client_id, produit, montant) VALUES (?, ?, ?)',
+                     (client_id, produit, float(montant)))
+        conn.commit()
+    except (sqlite3.IntegrityError, ValueError):
+        return "<h2>Commande impossible (client inexistant ou montant invalide)</h2>", 400
+    finally:
+        conn.close()
+    return redirect(f'/fiche_client/{client_id}')
 
 
 # ---------------------------------------------------------------

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Statistiques</title>
+    <style>
+        table { border-collapse: collapse; }
+        th, td { border: 1px solid #ccc; padding: 6px 12px; }
+        th { background: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <h1>Statistiques par client</h1>
+    <table>
+        <tr><th>Client</th><th>Nombre de commandes</th><th>Total dépensé</th></tr>
+        {% for row in data %}
+        <tr>
+            <td><a href="/fiche_client/{{ row['id'] }}">{{ row['nom'] }} {{ row['prenom'] }}</a></td>
+            <td>{{ row['nb_commandes'] }}</td>
+            <td>{{ '%.2f'|format(row['total']) }} €</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <p><a href="/consultation/">⬅️ Retour aux clients</a></p>
+</body>
+</html>

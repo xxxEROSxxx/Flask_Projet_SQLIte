@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS commandes;
 DROP TABLE IF EXISTS clients;
 CREATE TABLE clients (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -6,4 +7,12 @@ CREATE TABLE clients (
     prenom TEXT NOT NULL,
     adresse TEXT NOT NULL,
     telephone TEXT
+);
+CREATE TABLE commandes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_id INTEGER NOT NULL,
+    produit TEXT NOT NULL,
+    montant REAL NOT NULL,
+    date_commande TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (client_id) REFERENCES clients (id)
 );

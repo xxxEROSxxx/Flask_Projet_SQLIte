@@ -13,6 +13,8 @@
 import os
 import sqlite3
 
+from werkzeug.security import generate_password_hash
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 connection = sqlite3.connect(os.path.join(BASE_DIR, 'database.db'))
@@ -30,6 +32,9 @@ cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)", ('LAM
 cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)", ('GAGNON', 'Nicolas', '456, Boulevard des Cerisiers, 69003 Lyon'))
 cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)", ('DUBOIS', 'Charlotte', '789, Rue des Roses, 13005 Marseille'))
 cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)", ('LEFEVRE', 'Thomas', '333, Rue de la Paix, 75002 Paris'))
+
+cur.execute("INSERT INTO utilisateurs (login, mot_de_passe_hash, role) VALUES (?, ?, ?)", ('admin', generate_password_hash('password'), 'admin'))
+cur.execute("INSERT INTO utilisateurs (login, mot_de_passe_hash, role) VALUES (?, ?, ?)", ('user', generate_password_hash('12345'), 'user'))
 
 connection.commit()
 connection.close()

@@ -11,7 +11,9 @@
     </style>
 </head>
 <body>
+    <p>Connecté : <strong>{{ session['utilisateur'] }}</strong> ({{ session['role'] }}) · <a href="/deconnexion">Se déconnecter</a></p>
     <h1>Liste des Clients</h1>
+    {% if session['role'] == 'admin' %}<p><a href="/enregistrer_client">➕ Nouveau client</a></p>{% endif %}
     <p>{{ data|length }} client(s) dans la base.</p>
     <table>
         <tr>
@@ -21,7 +23,7 @@
             <th>Prénom</th>
             <th>Adresse</th>
             <th>Téléphone</th>
-            <th>Actions</th>
+            {% if session['role'] == 'admin' %}<th>Actions</th>{% endif %}
         </tr>
         {% for row in data %}
         <tr>
@@ -31,6 +33,7 @@
             <td>{{ row['prenom'] }}</td>
             <td>{{ row['adresse'] }}</td>
             <td>{{ row['telephone'] or '-' }}</td>
+            {% if session['role'] == 'admin' %}
             <td>
                 <a href="/modifier_client/{{ row['id'] }}">✏️ Modifier</a>
                 <form action="/supprimer_client/{{ row['id'] }}" method="post"
@@ -38,6 +41,7 @@
                     <button type="submit">🗑️ Supprimer</button>
                 </form>
             </td>
+            {% endif %}
         </tr>
         {% endfor %}
     </table>

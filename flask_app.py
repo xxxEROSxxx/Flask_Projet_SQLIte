@@ -13,6 +13,7 @@ import os
 import sqlite3
 
 from flask import Flask, render_template, request, redirect, url_for, session
+from werkzeug.security import check_password_hash
 
 app = Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'  # Clé secrète pour signer les sessions (à cacher par la suite)
@@ -37,6 +38,12 @@ def est_authentifie():
     return session.get('authentifie')
 
 
+# Exercice 8 : vérifier le rôle de l'utilisateur connecté
+def a_le_role(*roles):
+    """Renvoie True si l'utilisateur connecté a l'un des rôles indiqués."""
+    return session.get('role') in roles
+
+
 @app.route('/')
 def hello_world():
     return render_template('hello.html')
@@ -55,20 +62,30 @@ def lecture():
 @app.route('/authentification', methods=['GET', 'POST'])
 def authentification():
     if request.method == 'POST':
-        # Vérifier les identifiants
-        if request.form['username'] == 'admin' and request.form['password'] == 'password':  # password à cacher par la suite
+        conn = get_db()
+        compte = conn.execute('SELECT * FROM utilisateurs WHERE login = ?',
+                              (request.form['username'],)).fetchone()
+        conn.close()
+        if compte and check_password_hash(compte['mot_de_passe_hash'], request.form['password']):
             session['authentifie'] = True
-            # Rediriger vers la route lecture après une authentification réussie
+            session['utilisateur'] = compte['login']
+            session['role'] = compte['role']
             return redirect(url_for('lecture'))
-        else:
-            # Afficher un message d'erreur si les identifiants sont incorrects
-            return render_template('formulaire_authentification.html', error=True)
+        return render_template('formulaire_authentification.html', error=True)
 
     return render_template('formulaire_authentification.html', error=False)
 
 
+@app.route('/deconnexion')
+def deconnexion():
+    session.clear()
+    return redirect('/')
+
+
 @app.route('/fiche_client/<int:post_id>')
 def Readfiche(post_id):
+    if not a_le_role('user', 'admin'):
+        return redirect(url_for('authentification'))
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM clients WHERE id = ?', (post_id,))
@@ -85,6 +102,8 @@ def Readfiche(post_id):
 
 @app.route('/consultation/')
 def ReadBDD():
+    if not a_le_role('user', 'admin'):
+        return redirect(url_for('authentification'))
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM clients ORDER BY nom;')
@@ -95,11 +114,19 @@ def ReadBDD():
 
 @app.route('/enregistrer_client', methods=['GET'])
 def formulaire_client():
+    if not est_authentifie():
+        return redirect(url_for('authentification'))
+    if not a_le_role('admin'):
+        return "<h2>Accès refusé : réservé aux administrateurs</h2>", 403
     return render_template('formulaire.html')  # afficher le formulaire
 
 
 @app.route('/enregistrer_client', methods=['POST'])
 def enregistrer_client():
+    if not est_authentifie():
+        return redirect(url_for('authentification'))
+    if not a_le_role('admin'):
+        return "<h2>Accès refusé : réservé aux administrateurs</h2>", 403
     # Exercice 4 : on récupère les 3 champs et on les nettoie
     nom = request.form.get('nom', '').strip().upper()
     prenom = request.form.get('prenom', '').strip()
@@ -127,6 +154,8 @@ def enregistrer_client():
 # Exercice 3 - Partie A : recherche par nom exact (requête protégée avec ?)
 @app.route('/fiche_nom/<nom>')
 def fiche_nom(nom):
+    if not a_le_role('user', 'admin'):
+        return redirect(url_for('authentification'))
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM clients WHERE nom = ?', (nom,))
@@ -141,6 +170,8 @@ TRIS_AUTORISES = {'nom': 'nom', 'prenom': 'prenom', 'date': 'created'}
 
 @app.route('/recherche')
 def recherche():
+    if not a_le_role('user', 'admin'):
+        return redirect(url_for('authentification'))
     q = request.args.get('q', '').strip()
     tri = request.args.get('tri', 'nom')
     colonne = TRIS_AUTORISES.get(tri, 'nom')  # seules les colonnes de la liste sont acceptées
@@ -160,6 +191,10 @@ def recherche():
 # Exercice 5 - Partie A + Exercice 7 - Partie D : supprimer un client (POST uniquement)
 @app.route('/supprimer_client/<int:id>', methods=['POST'])
 def supprimer_client(id):
+    if not est_authentifie():
+        return redirect(url_for('authentification'))
+    if not a_le_role('admin'):
+        return "<h2>Accès refusé : réservé aux administrateurs</h2>", 403
     conn = get_db()
     try:
         conn.execute('DELETE FROM clients WHERE id = ?', (id,))
@@ -176,6 +211,10 @@ def supprimer_client(id):
 # Exercice 5 - Partie B : modifier un client (GET = formulaire pré-rempli, POST = enregistrer)
 @app.route('/modifier_client/<int:id>', methods=['GET', 'POST'])
 def modifier_client(id):
+    if not est_authentifie():
+        return redirect(url_for('authentification'))
+    if not a_le_role('admin'):
+        return "<h2>Accès refusé : réservé aux administrateurs</h2>", 403
     conn = get_db()
     cursor = conn.cursor()
 
@@ -201,6 +240,8 @@ def modifier_client(id):
 # Exercice 7 - Partie C : toutes les commandes avec le nom du client (JOIN)
 @app.route('/commandes/')
 def liste_commandes():
+    if not a_le_role('user', 'admin'):
+        return redirect(url_for('authentification'))
     conn = get_db()
     data = conn.execute('''
         SELECT commandes.id, commandes.client_id, clients.nom, clients.prenom,
@@ -216,6 +257,8 @@ def liste_commandes():
 # Exercice 7 - Partie C : nombre de commandes et total par client (LEFT JOIN + GROUP BY)
 @app.route('/statistiques/')
 def statistiques():
+    if not a_le_role('user', 'admin'):
+        return redirect(url_for('authentification'))
     conn = get_db()
     data = conn.execute('''
         SELECT clients.id, clients.nom, clients.prenom,
@@ -233,6 +276,10 @@ def statistiques():
 # Exercice 7 - Défi : ajouter une commande depuis la fiche client
 @app.route('/ajouter_commande/<int:client_id>', methods=['POST'])
 def ajouter_commande(client_id):
+    if not est_authentifie():
+        return redirect(url_for('authentification'))
+    if not a_le_role('admin'):
+        return "<h2>Accès refusé : réservé aux administrateurs</h2>", 403
     produit = request.form.get('produit', '').strip()
     montant = request.form.get('montant', '').strip()
     if not produit or not montant:

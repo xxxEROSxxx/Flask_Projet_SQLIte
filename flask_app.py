@@ -146,19 +146,6 @@ def recherche():
     return render_template('recherche.html', q=q, data=data, tri=tri)
 
 
-# Exercice 3 - Partie C : route DANGEREUSE, à supprimer après le test !
-@app.route('/fiche_nom_dangereuse/<nom>')
-def fiche_nom_dangereuse(nom):
-    conn = get_db()
-    cursor = conn.cursor()
-    requete = "SELECT * FROM clients WHERE nom = '" + nom + "'"  # ❌ NE FAITES JAMAIS ÇA
-    print(requete, flush=True)  # la requête réellement exécutée apparaîtra dans le Server log
-    cursor.execute(requete)
-    data = cursor.fetchall()
-    conn.close()
-    return render_template('read_data.html', data=data)
-
-
 
 # ---------------------------------------------------------------
 #  Ne pas modifier : utile seulement pour lancer le site

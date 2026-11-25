@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Modifier un client</title>
+</head>
+<body>
+    <h1>Modifier le client n°{{ client['id'] }}</h1>
+    <form method="post">
+        <label>Nom : <input type="text" name="nom" value="{{ client['nom'] }}" required></label><br><br>
+        <label>Prénom : <input type="text" name="prenom" value="{{ client['prenom'] }}" required></label><br><br>
+        <label>Adresse : <input type="text" name="adresse" value="{{ client['adresse'] }}" required></label><br><br>
+        <button type="submit">Enregistrer les modifications</button>
+    </form>
+    <p><a href="/consultation/">Annuler</a></p>
+</body>
+</html>

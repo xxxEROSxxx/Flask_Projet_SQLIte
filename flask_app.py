@@ -100,6 +100,7 @@ def enregistrer_client():
     nom = request.form.get('nom', '').strip().upper()
     prenom = request.form.get('prenom', '').strip()
     adresse = request.form.get('adresse', '').strip()
+    telephone = request.form.get('telephone', '').strip()
 
     # Validation côté serveur : on ne fait jamais confiance au navigateur
     if not nom or not prenom or not adresse:
@@ -108,7 +109,8 @@ def enregistrer_client():
     conn = get_db()
     cursor = conn.cursor()
     # On n'indique plus "created" : SQLite met la date du jour (DEFAULT CURRENT_TIMESTAMP)
-    cursor.execute('INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)', (nom, prenom, adresse))
+    cursor.execute('INSERT INTO clients (nom, prenom, adresse, telephone) VALUES (?, ?, ?, ?)',
+                   (nom, prenom, adresse, telephone))
     conn.commit()
     conn.close()
     return redirect('/consultation/')
@@ -169,10 +171,11 @@ def modifier_client(id):
     cursor = conn.cursor()
 
     if request.method == 'POST':
-        cursor.execute('UPDATE clients SET nom = ?, prenom = ?, adresse = ? WHERE id = ?',
+        cursor.execute('UPDATE clients SET nom = ?, prenom = ?, adresse = ?, telephone = ? WHERE id = ?',
                        (request.form['nom'].strip().upper(),
                         request.form['prenom'].strip(),
                         request.form['adresse'].strip(),
+                        request.form.get('telephone', '').strip(),
                         id))
         conn.commit()
         conn.close()

@@ -10,6 +10,7 @@
         <label>Nom : <input type="text" name="nom" value="{{ client['nom'] }}" required></label><br><br>
         <label>Prénom : <input type="text" name="prenom" value="{{ client['prenom'] }}" required></label><br><br>
         <label>Adresse : <input type="text" name="adresse" value="{{ client['adresse'] }}" required></label><br><br>
+        <label>Téléphone : <input type="tel" name="telephone" value="{{ client['telephone'] or '' }}"></label><br><br>
         <button type="submit">Enregistrer les modifications</button>
     </form>
     <p><a href="/consultation/">Annuler</a></p>

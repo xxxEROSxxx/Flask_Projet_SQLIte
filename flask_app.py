@@ -114,6 +114,50 @@ def enregistrer_client():
 #  Ajoutez vos nouvelles routes ci-dessous 👇
 # ---------------------------------------------------------------
 
+# Exercice 3 - Partie A : recherche par nom exact (requête protégée avec ?)
+@app.route('/fiche_nom/<nom>')
+def fiche_nom(nom):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM clients WHERE nom = ?', (nom,))
+    data = cursor.fetchall()
+    conn.close()
+    return render_template('read_data.html', data=data)
+
+
+# Exercice 3 - Partie B + Défi : formulaire de recherche avec choix du tri
+TRIS_AUTORISES = {'nom': 'nom', 'prenom': 'prenom', 'date': 'created'}
+
+
+@app.route('/recherche')
+def recherche():
+    q = request.args.get('q', '').strip()
+    tri = request.args.get('tri', 'nom')
+    colonne = TRIS_AUTORISES.get(tri, 'nom')  # seules les colonnes de la liste sont acceptées
+    data = []
+    if q:
+        conn = get_db()
+        cursor = conn.cursor()
+        motif = '%' + q + '%'
+        cursor.execute('SELECT * FROM clients WHERE nom LIKE ? OR prenom LIKE ? ORDER BY ' + colonne,
+                       (motif, motif))
+        data = cursor.fetchall()
+        conn.close()
+    return render_template('recherche.html', q=q, data=data, tri=tri)
+
+
+# Exercice 3 - Partie C : route DANGEREUSE, à supprimer après le test !
+@app.route('/fiche_nom_dangereuse/<nom>')
+def fiche_nom_dangereuse(nom):
+    conn = get_db()
+    cursor = conn.cursor()
+    requete = "SELECT * FROM clients WHERE nom = '" + nom + "'"  # ❌ NE FAITES JAMAIS ÇA
+    print(requete, flush=True)  # la requête réellement exécutée apparaîtra dans le Server log
+    cursor.execute(requete)
+    data = cursor.fetchall()
+    conn.close()
+    return render_template('read_data.html', data=data)
+
 
 
 # ---------------------------------------------------------------

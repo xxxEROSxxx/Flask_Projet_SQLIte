@@ -3,17 +3,17 @@
 # ---------------------------------------------------------------
 #  ⚠️ Attention : ce script EFFACE toutes les données existantes
 #  (voir les "DROP TABLE" dans schema.sql) puis recrée les tables
-#  avec quelques données d'exemple.
+#  avec des données d'exemple (clients des ateliers + bibliothèque).
 #
 #  À lancer depuis une console Bash PythonAnywhere :
-#      cd ~/mysite
+#      cd ~/erosnathan
 #      python3 create_db.py
 # ---------------------------------------------------------------
 
 import os
 import sqlite3
 
-from werkzeug.security import generate_password_hash
+from donnees_bibliotheque import remplir
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -24,6 +24,7 @@ with open(os.path.join(BASE_DIR, 'schema.sql'), encoding='utf-8') as f:
 
 cur = connection.cursor()
 
+# Ateliers 1 à 9 : quelques clients
 cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)", ('DUPONT', 'Emilie', '123, Rue des Lilas, 75001 Paris'))
 cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)", ('LEROUX', 'Lucas', '456, Avenue du Soleil, 31000 Toulouse'))
 cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)", ('MARTIN', 'Amandine', '789, Rue des Érables, 69002 Lyon'))
@@ -33,8 +34,8 @@ cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)", ('GAG
 cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)", ('DUBOIS', 'Charlotte', '789, Rue des Roses, 13005 Marseille'))
 cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)", ('LEFEVRE', 'Thomas', '333, Rue de la Paix, 75002 Paris'))
 
-cur.execute("INSERT INTO utilisateurs (login, mot_de_passe_hash, role) VALUES (?, ?, ?)", ('admin', generate_password_hash('password'), 'admin'))
-cur.execute("INSERT INTO utilisateurs (login, mot_de_passe_hash, role) VALUES (?, ?, ?)", ('user', generate_password_hash('12345'), 'user'))
+# Projet bibliothèque : comptes, livres, emprunts
+remplir(connection)
 
 connection.commit()
 connection.close()

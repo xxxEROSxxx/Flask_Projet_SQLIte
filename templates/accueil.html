@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block titre %}Accueil{% endblock %}
+{% block contenu %}
+    <h1>📚 Bienvenue à la médiathèque</h1>
+    {% if not session.get('role') %}
+        <div class="carte">
+            <p>Connectez-vous pour consulter le catalogue et emprunter des livres.</p>
+            <a class="bouton" href="/authentification">Se connecter</a>
+        </div>
+    {% else %}
+        <div class="carte">
+            <h2>Lecteur</h2>
+            <ul>
+                <li><a href="/livres">Rechercher un livre</a> et voir s'il est disponible</li>
+                <li><a href="/mes_emprunts">Mes emprunts</a> : rendre un livre, voir mon historique</li>
+            </ul>
+        </div>
+        {% if session.get('role') == 'admin' %}
+        <div class="carte">
+            <h2>Administration</h2>
+            <ul>
+                <li><a href="/admin/livres">Gérer les livres et les stocks</a></li>
+                <li><a href="/admin/utilisateurs">Gérer les utilisateurs</a></li>
+                <li><a href="/admin/emprunts">Emprunts en cours et retards</a></li>
+                <li><a href="/admin/stats">Statistiques</a></li>
+                <li><a href="/consultation/">Ateliers 1 à 9 : clients et commandes</a></li>
+            </ul>
+        </div>
+        {% endif %}
+    {% endif %}
+    <div class="carte">
+        <h2>API</h2>
+        <ul>
+            <li><a href="/api/livres">/api/livres</a> : tous les livres avec leur disponibilité (JSON)</li>
+            <li><a href="/api/livres/1">/api/livres/1</a> : un livre</li>
+        </ul>
+    </div>
+{% endblock %}

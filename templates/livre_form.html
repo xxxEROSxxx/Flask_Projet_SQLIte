@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block titre %}{{ titre_page }}{% endblock %}
+{% block contenu %}
+    <h1>{{ titre_page }}</h1>
+    {% if erreur %}<div class="message erreur">{{ erreur }}</div>{% endif %}
+    <div class="carte">
+        <form method="post">
+            <p><label>Titre * :<br><input type="text" name="titre" value="{{ livre['titre'] or '' }}" required size="40"></label></p>
+            <p><label>Auteur * :<br><input type="text" name="auteur" value="{{ livre['auteur'] or '' }}" required size="40"></label></p>
+            <p><label>ISBN :<br><input type="text" name="isbn" value="{{ livre['isbn'] or '' }}"></label></p>
+            <p><label>Année :<br><input type="number" name="annee" value="{{ livre['annee'] or '' }}"></label></p>
+            <p><label>Genre :<br><input type="text" name="genre" value="{{ livre['genre'] or '' }}"></label></p>
+            <p><label>Nombre d'exemplaires :<br><input type="number" name="nb_exemplaires" min="0" value="{{ livre['nb_exemplaires'] }}" required></label></p>
+            <button type="submit">Enregistrer</button>
+            <a href="/admin/livres">Annuler</a>
+        </form>
+    </div>
+{% endblock %}

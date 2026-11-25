@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block titre %}Gestion des livres{% endblock %}
+{% block contenu %}
+    <h1>Gestion des livres</h1>
+    <p><a class="bouton" href="/admin/livres/nouveau">➕ Ajouter un livre</a></p>
+    <table>
+        <tr><th>Titre</th><th>Auteur</th><th>ISBN</th><th>Exemplaires</th><th>Disponibles</th><th>Actions</th></tr>
+        {% for l in livres %}
+        <tr>
+            <td>{{ l['titre'] }}</td>
+            <td>{{ l['auteur'] }}</td>
+            <td>{{ l['isbn'] or '-' }}</td>
+            <td>{{ l['nb_exemplaires'] }}</td>
+            <td>{{ l['nb_disponibles'] }}</td>
+            <td>
+                <a href="/admin/livres/{{ l['id'] }}/modifier">✏️ Modifier</a>
+                <form class="inline" action="/admin/livres/{{ l['id'] }}/supprimer" method="post"
+                      onsubmit="return confirm('Supprimer ce livre ?');">
+                    <button class="danger" type="submit">🗑️ Supprimer</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

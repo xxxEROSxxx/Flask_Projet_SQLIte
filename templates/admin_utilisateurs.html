@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block titre %}Utilisateurs{% endblock %}
+{% block contenu %}
+    <h1>Gestion des utilisateurs</h1>
+    <p><a class="bouton" href="/admin/utilisateurs/nouveau">➕ Créer un compte</a></p>
+    <table>
+        <tr><th>Login</th><th>Nom</th><th>Prénom</th><th>Rôle</th><th>Emprunts en cours</th><th></th></tr>
+        {% for u in utilisateurs %}
+        <tr>
+            <td>{{ u['login'] }}</td>
+            <td>{{ u['nom'] or '-' }}</td>
+            <td>{{ u['prenom'] or '-' }}</td>
+            <td>{{ u['role'] }}</td>
+            <td>{{ u['nb_en_cours'] }}</td>
+            <td>
+                <form class="inline" action="/admin/utilisateurs/{{ u['id'] }}/supprimer" method="post"
+                      onsubmit="return confirm('Supprimer ce compte ?');">
+                    <button class="danger" type="submit">🗑️ Supprimer</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

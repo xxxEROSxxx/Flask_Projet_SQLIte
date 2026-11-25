@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block titre %}Emprunts en cours{% endblock %}
+{% block contenu %}
+    <h1>Emprunts en cours</h1>
+    {% set retards = emprunts|selectattr('en_retard')|list %}
+    {% if retards %}<div class="message erreur">⏰ {{ retards|length }} emprunt(s) en retard.</div>{% endif %}
+    <table>
+        <tr><th>Livre</th><th>Lecteur</th><th>Emprunté le</th><th>Retour prévu</th><th></th></tr>
+        {% for e in emprunts %}
+        <tr {% if e['en_retard'] %}class="retard"{% endif %}>
+            <td>{{ e['titre'] }}</td>
+            <td>{{ e['login'] }}</td>
+            <td>{{ e['date_emprunt'] }}</td>
+            <td>{{ e['date_retour_prevue'] }}{% if e['en_retard'] %} ⏰ en retard{% endif %}</td>
+            <td>
+                <form class="inline" action="/rendre/{{ e['id'] }}" method="post">
+                    <button type="submit">Marquer comme rendu</button>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5">Aucun emprunt en cours.</td></tr>
+        {% endfor %}
+    </table>
+{% endblock %}

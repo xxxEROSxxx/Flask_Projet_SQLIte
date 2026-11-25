@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block titre %}Médiathèque{% endblock %} · Médiathèque</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: system-ui, Arial, sans-serif; background: #f6f7f9; color: #222; }
+        nav { background: #1f3a5f; padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+        nav a { color: #fff; text-decoration: none; }
+        nav a:hover { text-decoration: underline; }
+        nav .logo { font-weight: bold; font-size: 1.1em; margin-right: 10px; }
+        nav .admin { color: #ffd479; }
+        nav .droite { margin-left: auto; color: #cfd8e3; }
+        main { max-width: 1000px; margin: 20px auto; padding: 0 16px; }
+        table { border-collapse: collapse; width: 100%; background: #fff; }
+        th, td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; }
+        th { background: #eef1f5; }
+        form.inline { display: inline; }
+        button, .bouton { background: #1f3a5f; color: #fff; border: 0; padding: 6px 12px; border-radius: 4px;
+                          cursor: pointer; text-decoration: none; font-size: 0.9em; }
+        button.danger { background: #b3261e; }
+        button:disabled { background: #999; cursor: not-allowed; }
+        input, select { padding: 6px; border: 1px solid #bbb; border-radius: 4px; }
+        .message { padding: 10px 14px; border-radius: 4px; margin-bottom: 14px; }
+        .message.ok { background: #e3f4e5; border: 1px solid #7bc47f; }
+        .message.erreur { background: #fde7e7; border: 1px solid #e08a8a; }
+        .dispo { color: #1a7f37; font-weight: bold; }
+        .indispo { color: #b3261e; font-weight: bold; }
+        .retard { background: #fde7e7; }
+        .carte { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 16px; margin-bottom: 14px; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a class="logo" href="/">📚 Médiathèque</a>
+        <a href="/livres">Catalogue</a>
+        {% if session.get('role') %}
+            <a href="/mes_emprunts">Mes emprunts</a>
+        {% endif %}
+        {% if session.get('role') == 'admin' %}
+            <a class="admin" href="/admin/livres">Livres</a>
+            <a class="admin" href="/admin/utilisateurs">Utilisateurs</a>
+            <a class="admin" href="/admin/emprunts">Emprunts</a>
+            <a class="admin" href="/admin/stats">Stats</a>
+        {% endif %}
+        <span class="droite">
+            {% if session.get('role') %}
+                {{ session.get('utilisateur') }} ({{ session.get('role') }}) · <a href="/deconnexion">Déconnexion</a>
+            {% else %}
+                <a href="/authentification">Connexion</a>
+            {% endif %}
+        </span>
+    </nav>
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for categorie, message in messages %}
+                <div class="message {{ categorie }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+        {% block contenu %}{% endblock %}
+    </main>
+</body>
+</html>

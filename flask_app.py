@@ -26,7 +26,9 @@ DATABASE = os.path.join(BASE_DIR, 'database.db')
 
 def get_db():
     """Ouvre une connexion à la base de données SQLite."""
-    return sqlite3.connect(DATABASE)
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row  # pour écrire row['nom'] au lieu de row[2]
+    return conn
 
 
 # Fonction pour savoir si l'utilisateur s'est authentifié
@@ -69,17 +71,19 @@ def Readfiche(post_id):
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM clients WHERE id = ?', (post_id,))
-    data = cursor.fetchall()
+    data = cursor.fetchone()  # une seule ligne (ou None si l'id n'existe pas)
     conn.close()
-    # Rendre le template HTML et transmettre les données
-    return render_template('read_data.html', data=data)
+    if not data:
+        return "<h2>Client introuvable</h2>", 404
+    # Rendre le template HTML de la fiche et transmettre le client
+    return render_template('fiche_client.html', client=data)
 
 
 @app.route('/consultation/')
 def ReadBDD():
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM clients;')
+    cursor.execute('SELECT * FROM clients ORDER BY nom;')
     data = cursor.fetchall()
     conn.close()
     return render_template('read_data.html', data=data)

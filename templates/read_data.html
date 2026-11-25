@@ -1,11 +1,17 @@
-<!DOCTYPE>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <title>Clients</title>
+    <style>
+        table { border-collapse: collapse; }
+        th, td { border: 1px solid #ccc; padding: 6px 12px; }
+        th { background: #f0f0f0; }
+    </style>
 </head>
 <body>
     <h1>Liste des Clients</h1>
+    <p>{{ data|length }} client(s) dans la base.</p>
     <table>
         <tr>
             <th>ID</th>
@@ -16,11 +22,11 @@
         </tr>
         {% for row in data %}
         <tr>
-            <td>{{ row[0] }}</td>
-            <td>{{ row[1] }}</td>
-            <td>{{ row[2] }}</td>
-            <td>{{ row[3] }}</td>
-            <td>{{ row[4] }}</td>
+            <td>{{ row['id'] }}</td>
+            <td>{{ row['created'] }}</td>
+            <td><a href="/fiche_client/{{ row['id'] }}">{{ row['nom'] }}</a></td>
+            <td>{{ row['prenom'] }}</td>
+            <td>{{ row['adresse'] }}</td>
         </tr>
         {% endfor %}
     </table>

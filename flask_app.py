@@ -12,7 +12,7 @@
 import os
 import sqlite3
 
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from werkzeug.security import check_password_hash
 
 app = Flask(__name__)
@@ -294,6 +294,79 @@ def ajouter_commande(client_id):
     finally:
         conn.close()
     return redirect(f'/fiche_client/{client_id}')
+
+
+# Exercice 9 - Partie A + Défi 2 : liste des clients en JSON (filtre optionnel ?q=)
+@app.get('/api/clients')
+def api_liste_clients():
+    q = request.args.get('q', '').strip()
+    conn = get_db()
+    if q:
+        motif = '%' + q + '%'
+        rows = conn.execute('SELECT * FROM clients WHERE nom LIKE ? OR prenom LIKE ? ORDER BY nom',
+                            (motif, motif)).fetchall()
+    else:
+        rows = conn.execute('SELECT * FROM clients ORDER BY nom').fetchall()
+    conn.close()
+    return jsonify([dict(row) for row in rows])
+
+
+# Exercice 9 - Partie A : un seul client en JSON
+@app.get('/api/clients/<int:id>')
+def api_un_client(id):
+    conn = get_db()
+    row = conn.execute('SELECT * FROM clients WHERE id = ?', (id,)).fetchone()
+    conn.close()
+    if row is None:
+        return jsonify({'erreur': 'Client introuvable'}), 404
+    return jsonify(dict(row))
+
+
+# Exercice 9 - Parties B et C : créer un client en JSON (admin uniquement)
+@app.post('/api/clients')
+def api_creer_client():
+    if not a_le_role('admin'):
+        return jsonify({'erreur': 'Authentification administrateur requise'}), 401
+
+    donnees = request.get_json(silent=True) or {}
+    nom = str(donnees.get('nom', '')).strip().upper()
+    prenom = str(donnees.get('prenom', '')).strip()
+    adresse = str(donnees.get('adresse', '')).strip()
+
+    if not nom or not prenom or not adresse:
+        return jsonify({'erreur': 'Les champs nom, prenom et adresse sont obligatoires'}), 400
+
+    conn = get_db()
+    cursor = conn.execute('INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)',
+                          (nom, prenom, adresse))
+    conn.commit()
+    nouvel_id = cursor.lastrowid
+    conn.close()
+    return jsonify({'id': nouvel_id, 'nom': nom, 'prenom': prenom, 'adresse': adresse}), 201
+
+
+# Exercice 9 - Défi 1 : supprimer un client en JSON (admin uniquement)
+@app.delete('/api/clients/<int:id>')
+def api_supprimer_client(id):
+    if not a_le_role('admin'):
+        return jsonify({'erreur': 'Authentification administrateur requise'}), 401
+    conn = get_db()
+    try:
+        cursor = conn.execute('DELETE FROM clients WHERE id = ?', (id,))
+        conn.commit()
+        if cursor.rowcount == 0:
+            return jsonify({'erreur': 'Client introuvable'}), 404
+    except sqlite3.IntegrityError:
+        return jsonify({'erreur': 'Impossible : ce client a des commandes'}), 409
+    finally:
+        conn.close()
+    return jsonify({'supprime': id})
+
+
+# Exercice 9 - Défi 3 : page HTML qui appelle l'API en JavaScript
+@app.route('/clients_api')
+def clients_api():
+    return render_template('clients_api.html')
 
 
 # ---------------------------------------------------------------

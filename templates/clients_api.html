@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Clients (API)</title>
+</head>
+<body>
+    <h1>Clients chargés par l'API</h1>
+    <input type="text" id="q" placeholder="Filtrer (nom ou prénom)...">
+    <p id="info">Chargement...</p>
+    <ul id="liste"></ul>
+    <p><a href="/consultation/">⬅️ Retour à la liste classique</a></p>
+
+    <script>
+        // Appelle /api/clients en JavaScript et affiche la liste SANS recharger la page
+        async function charger() {
+            const q = document.getElementById('q').value;
+            const reponse = await fetch('/api/clients?q=' + encodeURIComponent(q));
+            const clients = await reponse.json();
+            const liste = document.getElementById('liste');
+            liste.innerHTML = '';
+            for (const c of clients) {
+                const li = document.createElement('li');
+                li.textContent = c.id + ' - ' + c.nom + ' ' + c.prenom + ' (' + c.adresse + ')';
+                liste.appendChild(li);
+            }
+            document.getElementById('info').textContent = clients.length + ' client(s)';
+        }
+        document.getElementById('q').addEventListener('input', charger);
+        charger();
+    </script>
+</body>
+</html>

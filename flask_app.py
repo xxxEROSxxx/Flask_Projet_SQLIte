@@ -96,18 +96,22 @@ def formulaire_client():
 
 @app.route('/enregistrer_client', methods=['POST'])
 def enregistrer_client():
-    nom = request.form['nom']
-    prenom = request.form['prenom']
+    # Exercice 4 : on récupère les 3 champs et on les nettoie
+    nom = request.form.get('nom', '').strip().upper()
+    prenom = request.form.get('prenom', '').strip()
+    adresse = request.form.get('adresse', '').strip()
 
-    # Connexion à la base de données
+    # Validation côté serveur : on ne fait jamais confiance au navigateur
+    if not nom or not prenom or not adresse:
+        return render_template('formulaire.html', erreur="Tous les champs sont obligatoires."), 400
+
     conn = get_db()
     cursor = conn.cursor()
-
-    # Exécution de la requête SQL pour insérer un nouveau client
-    cursor.execute('INSERT INTO clients (created, nom, prenom, adresse) VALUES (?, ?, ?, ?)', (1002938, nom, prenom, "ICI"))
+    # On n'indique plus "created" : SQLite met la date du jour (DEFAULT CURRENT_TIMESTAMP)
+    cursor.execute('INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)', (nom, prenom, adresse))
     conn.commit()
     conn.close()
-    return redirect('/consultation/')  # Rediriger vers la liste des clients après l'enregistrement
+    return redirect('/consultation/')
 
 
 # ---------------------------------------------------------------
